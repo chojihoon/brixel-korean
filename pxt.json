@@ -1,0 +1,14 @@
+{
+    "name": "brixel-korean",
+    "version": "1.0.0",
+    "description": "OLED Korean font support for micro:bit (SSD1306/SH1106)",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "02_adv_displays.ts"
+    ],
+    "supportedTargets": [
+        "microbit"
+    ]
+}
