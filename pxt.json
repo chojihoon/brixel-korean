@@ -6,7 +6,7 @@
         "core": "*"
     },
     "files": [
-        "02_adv_displays.ts"
+        "oled_korean.ts"
     ],
     "supportedTargets": [
         "microbit"
