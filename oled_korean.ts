@@ -1082,8 +1082,7 @@ namespace OLEDKorean {
             let charCode = text.charCodeAt(i);
 
             if (charCode < 128) {
-                // ASCII
-                drawEnglish(charCode, cursorX, y);
+                // ASCII - Skip (User request)
                 cursorX += 8;
             } else {
                 // Korean
@@ -1212,34 +1211,7 @@ namespace OLEDKorean {
         }
     }
 
-    function drawEnglish(charCode: number, x: number, y: number) {
-        if (charCode < 32) return;
-        let index = (charCode - 32) * 16;
 
-        // Top Half
-        let pageY = Math.floor(y / 8);
-        if (pageY < 8) {
-            for (let col = 0; col < 8; col++) {
-                if (x + col < 128) {
-                    let val = E_FONT[index + col];
-                    let bufIdx = 1 + (pageY * 128) + (x + col);
-                    oled_buffer[bufIdx] = val;
-                }
-            }
-        }
-
-        // Bottom Half
-        pageY++;
-        if (pageY < 8) {
-            for (let col = 0; col < 8; col++) {
-                if (x + col < 128) {
-                    let val = E_FONT[index + 8 + col];
-                    let bufIdx = 1 + (pageY * 128) + (x + col);
-                    oled_buffer[bufIdx] = val;
-                }
-            }
-        }
-    }
 
     // Hangul Composition Constants
     const ChoSeong = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
