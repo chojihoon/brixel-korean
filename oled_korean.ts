@@ -1,3 +1,8 @@
+/**
+ * OLED Korean Support with SSD1306/SH1106 Drivers
+ */
+//% weight=100 color=#2c3e50 icon="\uf108" block="OLED Korean"
+//% groups="['OLED0.96\'(SSD1306)', 'OLED1.3\'(SH1106)']"
 namespace OLEDKorean {
     // 16x16 Korean Font (Chosung, Jungsung, Jongsung)
     export const K_FONT: number[] = [
@@ -1081,7 +1086,7 @@ namespace OLEDKorean {
      * Initialize the OLED display
      * @param type Display type (SSD1306 or SH1106)
      */
-    //% block="OLED initialize %type"
+    //% block="OLED 0.96' 초기화"
     //% group="OLED0.96'(SSD1306)"
     //% weight=100
     export function init(type: number = 0): void {
@@ -1147,7 +1152,7 @@ namespace OLEDKorean {
     /**
      * Clear the display
      */
-    //% block="OLED clear"
+    //% block="OLED 0.96' 화면 지우기"
     //% group="OLED0.96'(SSD1306)"
     //% weight=99
     export function clear(): void {
@@ -1163,7 +1168,7 @@ namespace OLEDKorean {
      * @param x X Coordinate
      * @param y Y Coordinate
      */
-    //% block="OLED show text %text|at x %x|y %y"
+    //% block="OLED 0.96' 문자열 출력 %text x: %x y: %y"
     //% group="OLED0.96'(SSD1306)"
     //% weight=90
     export function showString(text: string, x: number, y: number): void {
@@ -1193,7 +1198,7 @@ namespace OLEDKorean {
      * @param x X Coordinate
      * @param y Y Coordinate
      */
-    //% block="OLED show big number %num|at x %x|y %y"
+    //% block="OLED 0.96' 큰 숫자 출력 %num x: %x y: %y"
     //% group="OLED0.96'(SSD1306)"
     //% weight=80
     export function showBigNumber(num: number, x: number, y: number): void {
@@ -1238,7 +1243,7 @@ namespace OLEDKorean {
     /**
      * Initialize SH1106
      */
-    //% block="OLED 1.3' initialize"
+    //% block="OLED 1.3' 초기화"
     //% group="OLED1.3'(SH1106)"
     //% weight=100
     export function initSH1106(): void {
@@ -1248,7 +1253,7 @@ namespace OLEDKorean {
     /**
      * Clear SH1106
      */
-    //% block="OLED 1.3' clear"
+    //% block="OLED 1.3' 화면 지우기"
     //% group="OLED1.3'(SH1106)"
     //% weight=99
     export function clearSH1106(): void {
@@ -1258,7 +1263,7 @@ namespace OLEDKorean {
     /**
      * Show text on SH1106
      */
-    //% block="OLED 1.3' show text %text|at x %x|y %y"
+    //% block="OLED 1.3' 문자열 출력 %text x: %x y: %y"
     //% group="OLED1.3'(SH1106)"
     //% weight=90
     export function showStringSH1106(text: string, x: number, y: number): void {
@@ -1268,7 +1273,7 @@ namespace OLEDKorean {
     /**
      * Show Big Number on SH1106
      */
-    //% block="OLED 1.3' show big number %num|at x %x|y %y"
+    //% block="OLED 1.3' 큰 숫자 출력 %num x: %x y: %y"
     //% group="OLED1.3'(SH1106)"
     //% weight=80
     export function showBigNumberSH1106(num: number, x: number, y: number): void {
