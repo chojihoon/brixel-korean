@@ -1089,12 +1089,12 @@ namespace OLEDKorean {
     }
 
     /**
-     * 문자열 출력
+     * 문자열 출력 (영문/숫자만)
      * @param text 출력할 텍스트
      * @param x X 좌표
      * @param y Y 좌표
      */
-    //% block="OLED 0.96 문자열 출력 %text x: %x y: %y"
+    //% block="OLED 0.96 영문 출력 %text x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
     //% weight=90
     export function showString(text: string, x: number, y: number): void {
@@ -1102,48 +1102,60 @@ namespace OLEDKorean {
         ensureBuffer();
 
         let cursorX = x;
+        for (let i = 0; i < text.length; i++) {
+            let c = text.charCodeAt(i);
+            if (c >= 32 && c < 128) {
+                drawAscii(c, cursorX, y);
+                cursorX += 8;
+            }
+        }
+        updateDisplay();
+    }
+
+    /**
+     * 한글 문자열 출력 (Buffer 사용)
+     * @param text 출력할 한글 텍스트
+     * @param x X 좌표
+     * @param y Y 좌표
+     */
+    //% block="OLED 0.96 한글 출력 %text x: %x y: %y"
+    //% group="OLED 0.96 SSD1306"
+    //% weight=89
+    export function showKorean(text: string, x: number, y: number): void {
+        if (!_isInited) init(_displayType);
+        ensureBuffer();
+
+        // 문자열을 Buffer로 변환 (UTF-8)
+        let buf = Buffer.fromUTF8(text);
+        let cursorX = x;
         let i = 0;
-        while (i < text.length) {
-            let c1 = text.charCodeAt(i);
+
+        while (i < buf.length) {
+            let c1 = buf[i];
 
             if (c1 < 0x80) {
                 // ASCII (1 byte)
-                drawAscii(c1, cursorX, y);
-                cursorX += 8;
-                i++;
-            } else if (c1 >= 0xAC00 && c1 <= 0xD7A3) {
-                // Already Unicode codepoint (Korean syllable 가-힣)
-                drawKorean(c1, cursorX, y);
-                cursorX += 16;
+                if (c1 >= 32) {
+                    drawAscii(c1, cursorX, y);
+                    cursorX += 8;
+                }
                 i++;
             } else if ((c1 & 0xE0) == 0xC0) {
                 // 2-byte UTF-8 sequence
-                let c2 = text.charCodeAt(i + 1);
-                let charCode = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
-                drawAscii(charCode & 0x7F, cursorX, y);
-                cursorX += 8;
                 i += 2;
             } else if ((c1 & 0xF0) == 0xE0) {
                 // 3-byte UTF-8 sequence (Korean)
-                let c2 = text.charCodeAt(i + 1);
-                let c3 = text.charCodeAt(i + 2);
+                let c2 = buf[i + 1];
+                let c3 = buf[i + 2];
                 let charCode = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
 
                 if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
                     // Korean syllable (가-힣)
                     drawKorean(charCode, cursorX, y);
                     cursorX += 16;
-                } else {
-                    // Other 3-byte character
-                    drawAscii(0x3F, cursorX, y); // '?' for unsupported
-                    cursorX += 8;
                 }
                 i += 3;
-            } else if ((c1 & 0xF8) == 0xF0) {
-                // 4-byte UTF-8 sequence (skip)
-                i += 4;
             } else {
-                // Unknown byte (0x80-0xBF continuation byte alone)
                 i++;
             }
         }
