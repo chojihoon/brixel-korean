@@ -919,7 +919,7 @@ namespace OLEDKorean {
         // 4
         hex`
             0000000080C0E8DCBE3E3E3E3E3E3E3E
-            3E3E3E3E3E00000000000000000000
+            3E3E3E3E3E000000000000000000000000
             000000001F3F7F3F1F00000000000000
             00000000000000001F3F7F3F1F000000
             00000000FCFEFFFEFD03030303030303
@@ -931,7 +931,7 @@ namespace OLEDKorean {
             0000000080C0E8DCBE3E3E3E3E3E3E3E
             3E3E3E3E3E3E3E3E3E1C080000000000
             000000001F3F7FBFDFDFDFDFDFDFDFDF
-            DFDFDFDFDFDFDFDFC0800000000000
+            DFDFDFDFDFDFDFDFC080000000000000
             00000000000000000103030303030303
             0303030303030303FDFEFFFEFC000000
             000000000000081C3E3E3E3E3E3E3E3E
@@ -941,7 +941,7 @@ namespace OLEDKorean {
             0000000080C0E8DCBE3E3E3E3E3E3E3E
             3E3E3E3E3E3E3E3E3E1C080000000000
             000000001F3F7FBFDFDFDFDFDFDFDFDF
-            DFDFDFDFDFDFDFDFC0800000000000
+            DFDFDFDFDFDFDFDFC080000000000000
             00000000FCFEFFFEFD03030303030303
             0303030303030303FDFEFFFEFC000000
             0000000000010B1D3E3E3E3E3E3E3E3E
@@ -1101,19 +1101,50 @@ namespace OLEDKorean {
         if (!_isInited) init(_displayType);
         ensureBuffer();
 
-        // Korean char processing
         let cursorX = x;
-        for (let i = 0; i < text.length; i++) {
-            let charCode = text.charCodeAt(i);
+        let i = 0;
+        while (i < text.length) {
+            let c1 = text.charCodeAt(i);
 
-            if (charCode < 128) {
-                // ASCII
-                drawAscii(charCode, cursorX, y);
+            if (c1 < 0x80) {
+                // ASCII (1 byte)
+                drawAscii(c1, cursorX, y);
                 cursorX += 8;
-            } else {
-                // Korean
-                drawKorean(charCode, cursorX, y);
+                i++;
+            } else if (c1 >= 0xAC00 && c1 <= 0xD7A3) {
+                // Already Unicode codepoint (Korean syllable 가-힣)
+                drawKorean(c1, cursorX, y);
                 cursorX += 16;
+                i++;
+            } else if ((c1 & 0xE0) == 0xC0) {
+                // 2-byte UTF-8 sequence
+                let c2 = text.charCodeAt(i + 1);
+                let charCode = ((c1 & 0x1F) << 6) | (c2 & 0x3F);
+                drawAscii(charCode & 0x7F, cursorX, y);
+                cursorX += 8;
+                i += 2;
+            } else if ((c1 & 0xF0) == 0xE0) {
+                // 3-byte UTF-8 sequence (Korean)
+                let c2 = text.charCodeAt(i + 1);
+                let c3 = text.charCodeAt(i + 2);
+                let charCode = ((c1 & 0x0F) << 12) | ((c2 & 0x3F) << 6) | (c3 & 0x3F);
+
+                if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
+                    // Korean syllable (가-힣)
+                    drawKorean(charCode, cursorX, y);
+                    cursorX += 16;
+                } else {
+                    // Other 3-byte character
+                    drawAscii(0x3F, cursorX, y); // '?' for unsupported
+                    cursorX += 8;
+                }
+                i += 3;
+            } else if ((c1 & 0xF8) == 0xF0) {
+                // 4-byte UTF-8 sequence (skip)
+                i += 4;
+            } else {
+                // Unknown byte (0x80-0xBF continuation byte alone)
+                i++;
             }
         }
         updateDisplay();
@@ -1239,10 +1270,13 @@ namespace OLEDKorean {
         }
     }
 
-    // Hangul Composition Constants
-    const ChoSeong = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
-    const JungSeong = [0, 0, 0, 1, 2, 3, 4, 5, 0, 0, 6, 7, 8, 9, 9, 0, 10, 11, 12, 13, 14, 15, 16, 17, 0, 0, 18, 19, 20, 21, 0, 0];
-    const JongSeong = [0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 0, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 0, 0];
+    // Hangul Composition Constants (from original hmgothic)
+    // cho1: 받침 없는 경우의 초성 타입 (인덱스 = 중성 1-21)
+    const cho1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 3, 3, 3, 1, 2, 4, 4, 4, 2, 1, 3, 0];
+    // cho2: 받침 있는 경우의 초성 타입 (인덱스 = 중성 1-21)
+    const cho2 = [0, 5, 5, 5, 5, 5, 5, 5, 5, 6, 7, 7, 7, 6, 6, 7, 7, 7, 6, 6, 7, 5];
+    // jong: 종성 타입 (인덱스 = 중성 1-21)
+    const jongTypeTable = [0, 0, 2, 0, 2, 1, 2, 1, 2, 3, 0, 2, 1, 3, 3, 1, 2, 1, 3, 3, 1, 1];
 
     function drawAscii(charCode: number, x: number, y: number) {
         ensureBuffer();
@@ -1279,50 +1313,36 @@ namespace OLEDKorean {
         let code = charCode - 0xAC00;
         if (code < 0 || code > 11171) return;
 
-        let jong = code % 28;
-        let jung = Math.floor((code % 588) / 28);
-        let cho = Math.floor(code / 588);
+        // 종성, 중성, 초성 분리 (원본 C 코드와 동일한 로직)
+        let jong = code % 28;           // 종성 0-27 (0은 없음)
+        code = Math.floor(code / 28);
+        let cho = Math.floor(code / 21) + 1;  // 초성 1-19
+        let jung = (code % 21) + 1;           // 중성 1-21
 
-        // Calculate Font Indices
-        let cho_idx = 0;
+        // 초성 타입 및 중성 타입 계산
+        let choType = 0;
+        let jungType = 0;
+        let jongType = 0;
 
         if (jong == 0) {
-            if ([0, 1, 2, 3, 20].indexOf(jung) >= 0) cho_idx = 0;
-            else if ([4, 5, 6, 7].indexOf(jung) >= 0) cho_idx = 1;
-            else if ([8, 12].indexOf(jung) >= 0) cho_idx = 2;
-            else if ([13, 17].indexOf(jung) >= 0) cho_idx = 3;
-            else if ([18].indexOf(jung) >= 0) cho_idx = 4;
-            else if ([9, 10, 11].indexOf(jung) >= 0) cho_idx = 5;
-            else if ([14, 15, 16].indexOf(jung) >= 0) cho_idx = 6;
-            else cho_idx = 0;
+            // 받침 없는 경우
+            choType = cho1[jung];
+            if (cho == 1) jungType = 0;  // 초성 ㄱ
+            else jungType = 1;
         } else {
-            if ([0, 1, 2, 3, 20].indexOf(jung) >= 0) cho_idx = 0;
-            else {
-                if ([0, 1, 2, 3, 4, 5, 6, 7, 20].indexOf(jung) >= 0) cho_idx = 5;
-                else if ([8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].indexOf(jung) >= 0) cho_idx = 6;
-            }
+            // 받침 있는 경우
+            choType = cho2[jung];
+            if (cho == 1) jungType = 2;  // 초성 ㄱ
+            else jungType = 3;
+            jongType = jongTypeTable[jung];
         }
-        let final_cho = (cho_idx * 20) + cho;
 
-        let jung_type = 0;
-        if (jong == 0) {
-            if ([0, 1].indexOf(cho) >= 0 || cho == 15) jung_type = 0;
-            else jung_type = 1;
-        } else {
-            if ([0, 1].indexOf(cho) >= 0 || cho == 15) jung_type = 2;
-            else jung_type = 3;
-        }
-        let final_jung = 160 + (jung_type * 22) + jung;
-
+        // 폰트 인덱스 계산
+        let final_cho = choType * 20 + cho;
+        let final_jung = 160 + jungType * 22 + jung;
         let final_jong = 0;
         if (jong != 0) {
-            let jong_type = 0;
-            if ([0, 1, 2, 3, 20].indexOf(jung) >= 0) jong_type = 0;
-            else if ([4, 5, 6, 7].indexOf(jung) >= 0) jong_type = 1;
-            else if ([8, 9, 10, 11, 12].indexOf(jung) >= 0) jong_type = 2;
-            else jong_type = 3;
-
-            final_jong = 248 + (jong_type * 28) + jong;
+            final_jong = 248 + jongType * 28 + jong;
         }
 
         // Safety bounds
