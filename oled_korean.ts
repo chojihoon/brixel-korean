@@ -1151,7 +1151,7 @@ namespace OLEDKorean {
     }
 
     /**
-     * 디버그: 문자열의 charCodeAt 값 확인
+     * 디버그: 문자열의 길이와 첫번째 charCodeAt 값
      * @param text 테스트할 문자열
      */
     //% block="OLED 0.96 디버그 %text"
@@ -1163,19 +1163,25 @@ namespace OLEDKorean {
         oled_buffer.fill(0);
         oled_buffer[0] = 0x40;
 
-        // 첫 3바이트의 charCodeAt 값을 화면에 표시
-        let y = 0;
-        for (let i = 0; i < Math.min(text.length, 6); i++) {
-            let code = text.charCodeAt(i);
-            // 숫자를 문자열로 변환하여 출력
-            let codeStr = code.toString();
-            let xPos = 0;
+        // 문자열 길이 표시 (첫 줄)
+        let lenStr = "L:" + text.length;
+        let xPos = 0;
+        for (let j = 0; j < lenStr.length; j++) {
+            drawAscii(lenStr.charCodeAt(j), xPos, 0);
+            xPos += 8;
+        }
+
+        // 첫번째 문자의 charCodeAt 표시 (둘째 줄)
+        if (text.length > 0) {
+            let code = text.charCodeAt(0);
+            let codeStr = "C:" + code;
+            xPos = 0;
             for (let j = 0; j < codeStr.length; j++) {
-                drawAscii(codeStr.charCodeAt(j), xPos, y);
+                drawAscii(codeStr.charCodeAt(j), xPos, 16);
                 xPos += 8;
             }
-            y += 16;
         }
+
         updateDisplay();
     }
 
