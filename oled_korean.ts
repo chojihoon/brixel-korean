@@ -1163,57 +1163,6 @@ namespace OLEDKorean {
     }
 
     /**
-     * 디버그: 문자열의 길이와 첫번째 charCodeAt 값
-     * @param text 테스트할 문자열
-     */
-    //% block="OLED 0.96 디버그 %text"
-    //% group="OLED 0.96 SSD1306"
-    //% weight=85
-    export function debugCharCode(text: string): void {
-        if (!_isInited) init(_displayType);
-        ensureBuffer();
-        oled_buffer.fill(0);
-        oled_buffer[0] = 0x40;
-
-        // 문자열 길이 표시 (첫 줄)
-        let lenStr = "L:" + text.length;
-        let xPos = 0;
-        for (let j = 0; j < lenStr.length; j++) {
-            drawAscii(lenStr.charCodeAt(j), xPos, 0);
-            xPos += 8;
-        }
-
-        // 첫번째 문자의 charCodeAt 표시 (둘째 줄)
-        if (text.length > 0) {
-            let code = text.charCodeAt(0);
-            let codeStr = "C:" + code;
-            xPos = 0;
-            for (let j = 0; j < codeStr.length; j++) {
-                drawAscii(codeStr.charCodeAt(j), xPos, 16);
-                xPos += 8;
-            }
-        }
-
-        updateDisplay();
-    }
-
-    /**
-     * 디버그: 유니코드 직접 테스트
-     * @param code 유니코드 값 (예: 44032 = '가')
-     */
-    //% block="OLED 0.96 유니코드 테스트 %code x: %x y: %y"
-    //% group="OLED 0.96 SSD1306"
-    //% weight=84
-    export function testUnicode(code: number, x: number, y: number): void {
-        if (!_isInited) init(_displayType);
-        ensureBuffer();
-        if (code >= 0xAC00 && code <= 0xD7A3) {
-            drawKorean(code, x, y);
-        }
-        updateDisplay();
-    }
-
-    /**
      * 큰 숫자 출력
      * @param num 출력할 숫자 (0-9)
      * @param x X 좌표
