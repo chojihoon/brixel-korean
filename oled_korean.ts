@@ -1089,12 +1089,12 @@ namespace OLEDKorean {
     }
 
     /**
-     * 문자열 출력 (영문/숫자만)
+     * 문자열 출력 (한글+영문 자동 인식)
      * @param text 출력할 텍스트
      * @param x X 좌표
      * @param y Y 좌표
      */
-    //% block="OLED 0.96 영문 출력 %text x: %x y: %y"
+    //% block="OLED 0.96 문자열 출력 %text x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
     //% weight=90
     export function showString(text: string, x: number, y: number): void {
@@ -1102,62 +1102,70 @@ namespace OLEDKorean {
         ensureBuffer();
 
         let cursorX = x;
-        for (let i = 0; i < text.length; i++) {
-            let c = text.charCodeAt(i);
-            if (c >= 32 && c < 128) {
-                drawAscii(c, cursorX, y);
+        let i = 0;
+        while (i < text.length) {
+            let c1 = text.charCodeAt(i);
+
+            if (c1 >= 32 && c1 < 128) {
+                // ASCII
+                drawAscii(c1, cursorX, y);
                 cursorX += 8;
+                i++;
+            } else if (i + 1 < text.length) {
+                // 한글: 리틀 엔디안으로 2바이트 결합
+                let c2 = text.charCodeAt(i + 1);
+                let code = (c2 << 8) | c1;
+
+                if (code >= 0xAC00 && code <= 0xD7A3) {
+                    drawKorean(code, cursorX, y);
+                    cursorX += 16;
+                }
+                i += 2;
+            } else {
+                i++;
             }
         }
         updateDisplay();
     }
 
     /**
-     * 한글 코드로 출력 (유니코드 숫자를 쉼표로 구분)
-     * 예: "44032,45208,45796" → 가나다
-     * @param codes 유니코드 숫자들 (쉼표 구분)
+     * 한글 출력 (4자리 16진수, 공백으로 구분)
+     * 예: "AC00 B098 B2E4" → 가나다
+     * 예: "C548 B155 D558 C138 C694" → 안녕하세요
+     * @param hexCodes 16진수 코드들 (공백 구분)
      * @param x X 좌표
      * @param y Y 좌표
      */
-    //% block="OLED 0.96 한글코드 출력 %codes x: %x y: %y"
+    //% block="OLED 0.96 한글 %hexCodes x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
     //% weight=89
-    export function showKoreanCodes(codes: string, x: number, y: number): void {
+    export function showKoreanHex(hexCodes: string, x: number, y: number): void {
         if (!_isInited) init(_displayType);
         ensureBuffer();
 
         let cursorX = x;
-        let parts = codes.split(",");
+        let parts = hexCodes.split(" ");
 
         for (let i = 0; i < parts.length; i++) {
-            let code = parseInt(parts[i]);
+            let hex = parts[i];
+            if (hex.length == 0) continue;
+
+            let code = 0;
+            for (let j = 0; j < hex.length; j++) {
+                let c = hex.charCodeAt(j);
+                code = code * 16;
+                if (c >= 48 && c <= 57) code += c - 48;           // 0-9
+                else if (c >= 65 && c <= 70) code += c - 55;      // A-F
+                else if (c >= 97 && c <= 102) code += c - 87;     // a-f
+            }
+
             if (code >= 0xAC00 && code <= 0xD7A3) {
-                // 한글
                 drawKorean(code, cursorX, y);
                 cursorX += 16;
             } else if (code >= 32 && code < 128) {
-                // ASCII
                 drawAscii(code, cursorX, y);
                 cursorX += 8;
             }
-        }
-        updateDisplay();
-    }
-
-    /**
-     * 한글 한 글자 출력
-     * @param code 유니코드 (가=44032, 나=45208, 다=45796...)
-     * @param x X 좌표
-     * @param y Y 좌표
-     */
-    //% block="OLED 0.96 한글 %code x: %x y: %y"
-    //% group="OLED 0.96 SSD1306"
-    //% weight=88
-    export function showOneKorean(code: number, x: number, y: number): void {
-        if (!_isInited) init(_displayType);
-        ensureBuffer();
-        if (code >= 0xAC00 && code <= 0xD7A3) {
-            drawKorean(code, x, y);
         }
         updateDisplay();
     }
