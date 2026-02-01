@@ -1332,8 +1332,8 @@ namespace OLEDKorean {
     function drawAscii(charCode: number, x: number, y: number) {
         ensureBuffer();
         if (charCode < 32 || charCode > 127) return;
-        
-        let idx = (charCode - 32) * 16;
+
+        let idx = charCode * 16;  // E_FONT는 ASCII 0부터 시작
         let pageY = Math.floor(y / 8);
         
         // Top half
