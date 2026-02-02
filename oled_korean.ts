@@ -186,6 +186,7 @@ namespace OLEDKorean {
             
             if (curX >= 128) break;
         }
+        refresh(); // 자동 화면 갱신
     }
 
     //% blockId=oled_show_korean_text_sh1106
@@ -196,7 +197,25 @@ namespace OLEDKorean {
     //% group="OLED 1.3 SH1106"
     //% weight=80
     export function showKoreanTextSH1106(hexCodes: string, x: number, y: number): void {
-        showKoreanText(hexCodes, x, y);
+        ensureBuffer();
+        let codes = hexCodes.split(" ");
+        let curX = x;
+        
+        for (let code of codes) {
+            if (code.length == 0) continue;
+            let charCode = parseInt("0x" + code);
+            
+            if (charCode >= 0xAC00 && charCode <= 0xD7A3) {
+                drawKorean(charCode, curX, y);
+                curX += 16;
+            } else if (charCode >= 0x20 && charCode <= 0x7F) {
+                drawAscii(charCode, curX, y);
+                curX += 8;
+            }
+            
+            if (curX >= 128) break;
+        }
+        refresh(); // 자동 화면 갱신
     }
 
     // ============================================================
