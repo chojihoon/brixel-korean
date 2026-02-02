@@ -1,7 +1,7 @@
 {
     "name": "brixel-korean",
-    "version": "1.1.0",
-    "description": "OLED Korean font support for micro:bit (SSD1306/SH1106) with Korean input editor",
+    "version": "1.2.0",
+    "description": "OLED Korean font support for micro:bit (SSD1306/SH1106)",
     "dependencies": {
         "core": "*"
     },
@@ -10,12 +10,5 @@
     ],
     "supportedTargets": [
         "microbit"
-    ],
-    "extension": {
-        "namespace": "OLEDKorean",
-        "label": "한글 입력기",
-        "color": "#2c3e50",
-        "localUrl": "http://localhost:3000",
-        "url": "https://YOUR_GITHUB_USERNAME.github.io/brixel-korean/editor"
-    }
+    ]
 }

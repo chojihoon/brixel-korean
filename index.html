@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>한글 입력기 - OLED Korean</title>
+    <title>한글 → HEX 변환기 | OLED Korean for micro:bit</title>
     <style>
         * {
             box-sizing: border-box;
@@ -11,213 +11,296 @@
             padding: 0;
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             padding: 20px;
         }
         .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .card {
             background: white;
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            max-width: 500px;
-            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
         h1 {
             color: #333;
-            margin-bottom: 10px;
-            font-size: 24px;
+            margin-bottom: 8px;
+            font-size: 28px;
             text-align: center;
         }
         .subtitle {
             color: #666;
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
             font-size: 14px;
         }
-        .input-group {
-            margin-bottom: 20px;
+        .input-section {
+            margin-bottom: 25px;
         }
         label {
             display: block;
-            margin-bottom: 8px;
-            color: #444;
+            margin-bottom: 10px;
+            color: #333;
             font-weight: 600;
+            font-size: 16px;
         }
         input[type="text"] {
             width: 100%;
-            padding: 15px;
-            font-size: 18px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            padding: 18px 20px;
+            font-size: 24px;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s;
+            text-align: center;
         }
         input[type="text"]:focus {
             border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        input[type="text"]::placeholder {
+            color: #bbb;
         }
         .preview {
             background: #1a1a2e;
-            border-radius: 10px;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        .preview-label {
+            color: #888;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .preview-text {
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-size: 32px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(0,255,136,0.5);
+        }
+        .output-section {
+            background: #f8f9fa;
+            border-radius: 12px;
             padding: 20px;
-            margin-bottom: 20px;
-            min-height: 80px;
+            margin-bottom: 25px;
+        }
+        .output-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .char-count {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+        .hex-output {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            word-break: break-all;
+            color: #333;
+            min-height: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .hex-output:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+        .hex-output.copied {
+            border-color: #4caf50;
+            background: #e8f5e9;
+        }
+        .copy-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 700;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .preview-text {
-            color: #00ff00;
-            font-family: 'Courier New', monospace;
-            font-size: 24px;
-            letter-spacing: 2px;
-        }
-        .hex-output {
-            background: #f5f5f5;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            font-size: 12px;
-            word-break: break-all;
-            color: #666;
-        }
-        .hex-label {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 5px;
-        }
-        .btn-group {
-            display: flex;
             gap: 10px;
         }
-        button {
-            flex: 1;
-            padding: 15px 25px;
-            font-size: 16px;
-            font-weight: 600;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        button:hover {
+        .copy-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
         }
-        button:active {
+        .copy-btn:active {
             transform: translateY(0);
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        .btn-secondary {
-            background: #e0e0e0;
-            color: #333;
+        .copy-btn.copied {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
         }
         .quick-words {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #eee;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 2px solid #eee;
         }
         .quick-words h3 {
             font-size: 14px;
             color: #666;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            text-align: center;
         }
         .word-buttons {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
+            justify-content: center;
         }
         .word-btn {
-            padding: 8px 16px;
-            font-size: 14px;
-            background: #f0f0f0;
-            border: 1px solid #ddd;
-            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 15px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
             cursor: pointer;
             transition: all 0.2s;
+            font-weight: 500;
         }
         .word-btn:hover {
             background: #667eea;
             color: white;
             border-color: #667eea;
+            transform: scale(1.05);
         }
-        .status {
+        .instructions {
+            background: #fff3cd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .instructions h3 {
+            color: #856404;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .instructions ol {
+            color: #856404;
+            font-size: 14px;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+        .footer {
             text-align: center;
-            margin-top: 15px;
+            color: rgba(255,255,255,0.7);
             font-size: 12px;
-            color: #999;
+            margin-top: 20px;
         }
-        .status.connected {
-            color: #4caf50;
+        .footer a {
+            color: white;
+            text-decoration: none;
         }
-        .status.disconnected {
-            color: #f44336;
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 480px) {
+            .card {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 24px;
+            }
+            input[type="text"] {
+                font-size: 20px;
+                padding: 15px;
+            }
+            .preview-text {
+                font-size: 24px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🇰🇷 한글 입력기</h1>
-        <p class="subtitle">OLED에 표시할 한글을 입력하세요</p>
-        
-        <div class="input-group">
-            <label for="koreanInput">한글 입력</label>
-            <input type="text" id="koreanInput" placeholder="예: 안녕하세요" maxlength="20">
-        </div>
-        
-        <div class="preview">
-            <span class="preview-text" id="previewText">미리보기</span>
-        </div>
-        
-        <div class="hex-output">
-            <div class="hex-label">HEX 코드:</div>
-            <div id="hexOutput">-</div>
-        </div>
-        
-        <div class="btn-group">
-            <button class="btn-secondary" id="cancelBtn">취소</button>
-            <button class="btn-primary" id="applyBtn">적용</button>
-        </div>
-        
-        <div class="quick-words">
-            <h3>자주 쓰는 단어</h3>
-            <div class="word-buttons">
-                <button class="word-btn" data-word="안녕">안녕</button>
-                <button class="word-btn" data-word="시작">시작</button>
-                <button class="word-btn" data-word="정지">정지</button>
-                <button class="word-btn" data-word="온도">온도</button>
-                <button class="word-btn" data-word="습도">습도</button>
-                <button class="word-btn" data-word="밝기">밝기</button>
-                <button class="word-btn" data-word="거리">거리</button>
-                <button class="word-btn" data-word="버튼">버튼</button>
-                <button class="word-btn" data-word="켜기">켜기</button>
-                <button class="word-btn" data-word="끄기">끄기</button>
-                <button class="word-btn" data-word="성공">성공</button>
-                <button class="word-btn" data-word="실패">실패</button>
+        <div class="card">
+            <h1>🇰🇷 한글 → HEX 변환기</h1>
+            <p class="subtitle">micro:bit OLED에 한글을 출력하기 위한 변환 도구</p>
+            
+            <div class="input-section">
+                <label for="koreanInput">✏️ 한글 입력</label>
+                <input type="text" id="koreanInput" placeholder="여기에 한글 입력" maxlength="8" autofocus>
+            </div>
+            
+            <div class="preview">
+                <div class="preview-label">OLED 미리보기</div>
+                <div class="preview-text" id="previewText">-</div>
+            </div>
+            
+            <div class="output-section">
+                <div class="output-label">
+                    <span>📋 HEX 코드 (클릭하여 복사)</span>
+                    <span class="char-count" id="charCount">0글자</span>
+                </div>
+                <div class="hex-output" id="hexOutput" onclick="copyToClipboard()">한글을 입력하세요</div>
+            </div>
+            
+            <button class="copy-btn" id="copyBtn" onclick="copyToClipboard()">
+                <span>📋</span>
+                <span id="copyBtnText">HEX 코드 복사하기</span>
+            </button>
+            
+            <div class="quick-words">
+                <h3>⚡ 자주 쓰는 단어</h3>
+                <div class="word-buttons">
+                    <button class="word-btn" onclick="setWord('안녕')">안녕</button>
+                    <button class="word-btn" onclick="setWord('시작')">시작</button>
+                    <button class="word-btn" onclick="setWord('정지')">정지</button>
+                    <button class="word-btn" onclick="setWord('온도')">온도</button>
+                    <button class="word-btn" onclick="setWord('습도')">습도</button>
+                    <button class="word-btn" onclick="setWord('밝기')">밝기</button>
+                    <button class="word-btn" onclick="setWord('거리')">거리</button>
+                    <button class="word-btn" onclick="setWord('성공')">성공</button>
+                    <button class="word-btn" onclick="setWord('실패')">실패</button>
+                    <button class="word-btn" onclick="setWord('점수')">점수</button>
+                    <button class="word-btn" onclick="setWord('게임')">게임</button>
+                    <button class="word-btn" onclick="setWord('로봇')">로봇</button>
+                </div>
             </div>
         </div>
         
-        <div class="status" id="status">MakeCode 연결 대기중...</div>
+        <div class="card instructions">
+            <h3>📖 사용 방법</h3>
+            <ol>
+                <li>위 입력창에 <strong>한글</strong>을 입력하세요</li>
+                <li><strong>"HEX 코드 복사하기"</strong> 버튼을 클릭하세요</li>
+                <li>MakeCode에서 <strong>"OLED 0.96 한글출력"</strong> 블록을 추가하세요</li>
+                <li>텍스트 입력칸에 <strong>붙여넣기(Ctrl+V)</strong> 하세요</li>
+            </ol>
+        </div>
+        
+        <div class="footer">
+            <p>OLED Korean Extension for micro:bit</p>
+            <p><a href="https://github.com/chojihoon/brixel-korean" target="_blank">GitHub</a></p>
+        </div>
     </div>
 
     <script>
-        // Extension ID (MakeCode에서 전달됨)
-        let extId = '';
-        
-        // URL에서 extension ID 추출
-        const hash = window.location.hash;
-        if (hash) {
-            extId = hash.substring(1);
-        }
-        
         // 한글을 HEX 코드로 변환
         function koreanToHex(text) {
             if (!text) return '';
@@ -235,133 +318,76 @@
             return result.join(' ');
         }
         
-        // MakeCode에 메시지 전송
-        function sendMessage(action, body) {
-            const msg = {
-                id: Math.random().toString(),
-                type: 'pxtpkgext',
-                action: action,
-                extId: extId,
-                body: body
-            };
-            if (window.parent !== window) {
-                window.parent.postMessage(msg, '*');
-            }
-            return msg.id;
-        }
-        
-        // 초기화 메시지 전송
-        function initialize() {
-            sendMessage('extinit');
-            document.getElementById('status').textContent = 'MakeCode에 연결됨';
-            document.getElementById('status').className = 'status connected';
-        }
-        
-        // MakeCode로부터 메시지 수신
-        window.addEventListener('message', function(ev) {
-            const data = ev.data;
-            if (data && data.type === 'pxtpkgext') {
-                if (data.action === 'extinit') {
-                    console.log('Extension initialized');
-                } else if (data.action === 'extreadcode') {
-                    // 기존 코드 읽기 응답 처리
-                    if (data.body && data.body.json) {
-                        try {
-                            const saved = JSON.parse(data.body.json);
-                            if (saved.text) {
-                                document.getElementById('koreanInput').value = saved.text;
-                                updatePreview();
-                            }
-                        } catch (e) {}
-                    }
-                }
-            }
-        });
-        
         // 미리보기 업데이트
         function updatePreview() {
             const input = document.getElementById('koreanInput').value;
             const previewText = document.getElementById('previewText');
             const hexOutput = document.getElementById('hexOutput');
+            const charCount = document.getElementById('charCount');
             
             if (input) {
                 previewText.textContent = input;
                 hexOutput.textContent = koreanToHex(input);
+                charCount.textContent = input.length + '글자';
             } else {
-                previewText.textContent = '미리보기';
-                hexOutput.textContent = '-';
+                previewText.textContent = '-';
+                hexOutput.textContent = '한글을 입력하세요';
+                charCount.textContent = '0글자';
             }
+            
+            // 복사 상태 초기화
+            document.getElementById('copyBtn').classList.remove('copied');
+            document.getElementById('copyBtnText').textContent = 'HEX 코드 복사하기';
+            hexOutput.classList.remove('copied');
         }
         
-        // 적용 버튼
-        function applyText() {
+        // 클립보드에 복사
+        function copyToClipboard() {
             const input = document.getElementById('koreanInput').value;
             if (!input) {
-                alert('한글을 입력해주세요.');
+                alert('먼저 한글을 입력해주세요!');
                 return;
             }
             
             const hexCode = koreanToHex(input);
             
-            // TypeScript 코드 생성
-            const tsCode = `// 한글: ${input}\nconst KOREAN_TEXT = "${hexCode}";\n`;
-            
-            // JSON 데이터 저장
-            const jsonData = JSON.stringify({
-                text: input,
-                hex: hexCode,
-                timestamp: Date.now()
-            });
-            
-            // MakeCode에 코드 쓰기
-            sendMessage('extwritecode', {
-                code: tsCode,
-                json: jsonData
-            });
-            
-            // 클립보드에도 복사
             navigator.clipboard.writeText(hexCode).then(() => {
-                alert(`적용 완료!\n\n한글: ${input}\nHEX: ${hexCode}\n\n클립보드에 복사되었습니다.`);
-            }).catch(() => {
-                alert(`적용 완료!\n\n한글: ${input}\nHEX: ${hexCode}\n\n블록의 텍스트 입력에 위 HEX 코드를 붙여넣기 하세요.`);
+                // 성공 표시
+                const copyBtn = document.getElementById('copyBtn');
+                const copyBtnText = document.getElementById('copyBtnText');
+                const hexOutput = document.getElementById('hexOutput');
+                
+                copyBtn.classList.add('copied');
+                copyBtnText.textContent = '✓ 복사 완료!';
+                hexOutput.classList.add('copied');
+                
+                // 3초 후 원래대로
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtnText.textContent = 'HEX 코드 복사하기';
+                    hexOutput.classList.remove('copied');
+                }, 3000);
+            }).catch(err => {
+                // 폴백: 수동 복사 안내
+                prompt('아래 코드를 복사하세요 (Ctrl+C):', hexCode);
             });
         }
         
-        // 취소 버튼
-        function cancelEdit() {
-            sendMessage('exthidden');
-            if (window.parent !== window) {
-                window.parent.postMessage({ type: 'pxtpkgext', action: 'exthidden', extId: extId }, '*');
-            }
+        // 자주 쓰는 단어 설정
+        function setWord(word) {
+            document.getElementById('koreanInput').value = word;
+            updatePreview();
         }
         
-        // 이벤트 리스너 설정
+        // 이벤트 리스너
         document.getElementById('koreanInput').addEventListener('input', updatePreview);
-        document.getElementById('applyBtn').addEventListener('click', applyText);
-        document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
         
-        // 자주 쓰는 단어 버튼
-        document.querySelectorAll('.word-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const word = this.getAttribute('data-word');
-                const input = document.getElementById('koreanInput');
-                input.value = input.value + word;
-                updatePreview();
-                input.focus();
-            });
+        // Enter 키로 복사
+        document.getElementById('koreanInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                copyToClipboard();
+            }
         });
-        
-        // 페이지 로드 시 초기화
-        if (window.parent !== window) {
-            // iframe 내에서 실행 중
-            initialize();
-            // 기존 저장된 데이터 읽기 요청
-            sendMessage('extreadcode', { response: true });
-        } else {
-            // 독립 실행 (테스트용)
-            document.getElementById('status').textContent = '독립 실행 모드 (테스트)';
-            document.getElementById('status').className = 'status';
-        }
     </script>
 </body>
 </html>
