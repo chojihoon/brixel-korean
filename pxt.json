@@ -7,15 +7,15 @@
     },
     "files": [
         "oled_korean.ts",
-        "editor.ts"
+        "field_korean.js"
     ],
     "supportedTargets": [
         "microbit"
     ],
     "fieldEditors": [
         {
-            "selector": "koreantext",
-            "editor": "FieldKoreanText"
+            "selector": "korean",
+            "editor": "FieldKorean"
         }
     ]
 }

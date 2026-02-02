@@ -1137,7 +1137,7 @@ namespace OLEDKorean {
     //% block="OLED 0.96 한글출력 $hexCodes x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
     //% weight=91
-    //% hexCodes.fieldEditor="koreantext"
+    //% hexCodes.fieldEditor="korean"
     //% hexCodes.fieldOptions.decompileLiterals=true
     export function showKoreanText(hexCodes: string, x: number, y: number): void {
         showKoreanHex(hexCodes, x, y);
