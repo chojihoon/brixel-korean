@@ -1129,6 +1129,43 @@ namespace OLEDKorean {
     }
 
     /**
+     * 디버그: 문자열 분석
+     */
+    //% block="OLED 0.96 분석 %text"
+    //% group="OLED 0.96 SSD1306"
+    //% weight=95
+    export function analyzeString(text: string): void {
+        if (!_isInited) init(_displayType);
+        ensureBuffer();
+        oled_buffer.fill(0);
+        oled_buffer[0] = 0x40;
+
+        // 길이 출력
+        let len = text.length;
+        drawAscii(76, 0, 0);  // 'L'
+        drawAscii(58, 8, 0);  // ':'
+        let lenStr = len.toString();
+        for (let j = 0; j < lenStr.length; j++) {
+            drawAscii(lenStr.charCodeAt(j), 16 + j * 8, 0);
+        }
+
+        // 각 바이트 출력 (최대 6개)
+        for (let i = 0; i < Math.min(len, 6); i++) {
+            let c = text.charCodeAt(i);
+            let hex = "";
+            let h1 = (c >> 4) & 0x0F;
+            let h2 = c & 0x0F;
+            hex += String.fromCharCode(h1 < 10 ? 48 + h1 : 55 + h1);
+            hex += String.fromCharCode(h2 < 10 ? 48 + h2 : 55 + h2);
+
+            drawAscii(hex.charCodeAt(0), i * 24, 16 + Math.floor(i / 3) * 16);
+            drawAscii(hex.charCodeAt(1), i * 24 + 8, 16 + Math.floor(i / 3) * 16);
+        }
+
+        updateDisplay();
+    }
+
+    /**
      * 한글 출력 (4자리 16진수, 공백으로 구분)
      * 예: "AC00 B098 B2E4" → 가나다
      * 예: "C548 B155 D558 C138 C694" → 안녕하세요
