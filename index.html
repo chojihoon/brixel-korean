@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>한글 입력기 - OLED Korean</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+            text-align: center;
+        }
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #444;
+            font-weight: 600;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+        .preview {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-text {
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 24px;
+            letter-spacing: 2px;
+        }
+        .hex-output {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+            color: #666;
+        }
+        .hex-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            flex: 1;
+            padding: 15px 25px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .quick-words {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .quick-words h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .word-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .word-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .word-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #999;
+        }
+        .status.connected {
+            color: #4caf50;
+        }
+        .status.disconnected {
+            color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🇰🇷 한글 입력기</h1>
+        <p class="subtitle">OLED에 표시할 한글을 입력하세요</p>
+        
+        <div class="input-group">
+            <label for="koreanInput">한글 입력</label>
+            <input type="text" id="koreanInput" placeholder="예: 안녕하세요" maxlength="20">
+        </div>
+        
+        <div class="preview">
+            <span class="preview-text" id="previewText">미리보기</span>
+        </div>
+        
+        <div class="hex-output">
+            <div class="hex-label">HEX 코드:</div>
+            <div id="hexOutput">-</div>
+        </div>
+        
+        <div class="btn-group">
+            <button class="btn-secondary" id="cancelBtn">취소</button>
+            <button class="btn-primary" id="applyBtn">적용</button>
+        </div>
+        
+        <div class="quick-words">
+            <h3>자주 쓰는 단어</h3>
+            <div class="word-buttons">
+                <button class="word-btn" data-word="안녕">안녕</button>
+                <button class="word-btn" data-word="시작">시작</button>
+                <button class="word-btn" data-word="정지">정지</button>
+                <button class="word-btn" data-word="온도">온도</button>
+                <button class="word-btn" data-word="습도">습도</button>
+                <button class="word-btn" data-word="밝기">밝기</button>
+                <button class="word-btn" data-word="거리">거리</button>
+                <button class="word-btn" data-word="버튼">버튼</button>
+                <button class="word-btn" data-word="켜기">켜기</button>
+                <button class="word-btn" data-word="끄기">끄기</button>
+                <button class="word-btn" data-word="성공">성공</button>
+                <button class="word-btn" data-word="실패">실패</button>
+            </div>
+        </div>
+        
+        <div class="status" id="status">MakeCode 연결 대기중...</div>
+    </div>
+
+    <script>
+        // Extension ID (MakeCode에서 전달됨)
+        let extId = '';
+        
+        // URL에서 extension ID 추출
+        const hash = window.location.hash;
+        if (hash) {
+            extId = hash.substring(1);
+        }
+        
+        // 한글을 HEX 코드로 변환
+        function koreanToHex(text) {
+            if (!text) return '';
+            const result = [];
+            for (let i = 0; i < text.length; i++) {
+                const code = text.charCodeAt(i);
+                if (code >= 0xAC00 && code <= 0xD7A3) {
+                    // 한글 음절
+                    result.push(code.toString(16).toUpperCase());
+                } else if (code >= 32 && code < 128) {
+                    // ASCII
+                    result.push(code.toString(16).toUpperCase());
+                }
+            }
+            return result.join(' ');
+        }
+        
+        // MakeCode에 메시지 전송
+        function sendMessage(action, body) {
+            const msg = {
+                id: Math.random().toString(),
+                type: 'pxtpkgext',
+                action: action,
+                extId: extId,
+                body: body
+            };
+            if (window.parent !== window) {
+                window.parent.postMessage(msg, '*');
+            }
+            return msg.id;
+        }
+        
+        // 초기화 메시지 전송
+        function initialize() {
+            sendMessage('extinit');
+            document.getElementById('status').textContent = 'MakeCode에 연결됨';
+            document.getElementById('status').className = 'status connected';
+        }
+        
+        // MakeCode로부터 메시지 수신
+        window.addEventListener('message', function(ev) {
+            const data = ev.data;
+            if (data && data.type === 'pxtpkgext') {
+                if (data.action === 'extinit') {
+                    console.log('Extension initialized');
+                } else if (data.action === 'extreadcode') {
+                    // 기존 코드 읽기 응답 처리
+                    if (data.body && data.body.json) {
+                        try {
+                            const saved = JSON.parse(data.body.json);
+                            if (saved.text) {
+                                document.getElementById('koreanInput').value = saved.text;
+                                updatePreview();
+                            }
+                        } catch (e) {}
+                    }
+                }
+            }
+        });
+        
+        // 미리보기 업데이트
+        function updatePreview() {
+            const input = document.getElementById('koreanInput').value;
+            const previewText = document.getElementById('previewText');
+            const hexOutput = document.getElementById('hexOutput');
+            
+            if (input) {
+                previewText.textContent = input;
+                hexOutput.textContent = koreanToHex(input);
+            } else {
+                previewText.textContent = '미리보기';
+                hexOutput.textContent = '-';
+            }
+        }
+        
+        // 적용 버튼
+        function applyText() {
+            const input = document.getElementById('koreanInput').value;
+            if (!input) {
+                alert('한글을 입력해주세요.');
+                return;
+            }
+            
+            const hexCode = koreanToHex(input);
+            
+            // TypeScript 코드 생성
+            const tsCode = `// 한글: ${input}\nconst KOREAN_TEXT = "${hexCode}";\n`;
+            
+            // JSON 데이터 저장
+            const jsonData = JSON.stringify({
+                text: input,
+                hex: hexCode,
+                timestamp: Date.now()
+            });
+            
+            // MakeCode에 코드 쓰기
+            sendMessage('extwritecode', {
+                code: tsCode,
+                json: jsonData
+            });
+            
+            // 클립보드에도 복사
+            navigator.clipboard.writeText(hexCode).then(() => {
+                alert(`적용 완료!\n\n한글: ${input}\nHEX: ${hexCode}\n\n클립보드에 복사되었습니다.`);
+            }).catch(() => {
+                alert(`적용 완료!\n\n한글: ${input}\nHEX: ${hexCode}\n\n블록의 텍스트 입력에 위 HEX 코드를 붙여넣기 하세요.`);
+            });
+        }
+        
+        // 취소 버튼
+        function cancelEdit() {
+            sendMessage('exthidden');
+            if (window.parent !== window) {
+                window.parent.postMessage({ type: 'pxtpkgext', action: 'exthidden', extId: extId }, '*');
+            }
+        }
+        
+        // 이벤트 리스너 설정
+        document.getElementById('koreanInput').addEventListener('input', updatePreview);
+        document.getElementById('applyBtn').addEventListener('click', applyText);
+        document.getElementById('cancelBtn').addEventListener('click', cancelEdit);
+        
+        // 자주 쓰는 단어 버튼
+        document.querySelectorAll('.word-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const word = this.getAttribute('data-word');
+                const input = document.getElementById('koreanInput');
+                input.value = input.value + word;
+                updatePreview();
+                input.focus();
+            });
+        });
+        
+        // 페이지 로드 시 초기화
+        if (window.parent !== window) {
+            // iframe 내에서 실행 중
+            initialize();
+            // 기존 저장된 데이터 읽기 요청
+            sendMessage('extreadcode', { response: true });
+        } else {
+            // 독립 실행 (테스트용)
+            document.getElementById('status').textContent = '독립 실행 모드 (테스트)';
+            document.getElementById('status').className = 'status';
+        }
+    </script>
+</body>
+</html>
