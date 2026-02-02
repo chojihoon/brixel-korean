@@ -1129,40 +1129,18 @@ namespace OLEDKorean {
     }
 
     /**
-     * 디버그: 문자열 분석
+     * 한글 출력 (클릭하여 한글 입력)
+     * @param hexCodes 한글 텍스트 (내부적으로 hex 코드로 저장)
+     * @param x X 좌표
+     * @param y Y 좌표
      */
-    //% block="OLED 0.96 분석 %text"
+    //% block="OLED 0.96 한글출력 $hexCodes x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
-    //% weight=95
-    export function analyzeString(text: string): void {
-        if (!_isInited) init(_displayType);
-        ensureBuffer();
-        oled_buffer.fill(0);
-        oled_buffer[0] = 0x40;
-
-        // 길이 출력
-        let len = text.length;
-        drawAscii(76, 0, 0);  // 'L'
-        drawAscii(58, 8, 0);  // ':'
-        let lenStr = len.toString();
-        for (let j = 0; j < lenStr.length; j++) {
-            drawAscii(lenStr.charCodeAt(j), 16 + j * 8, 0);
-        }
-
-        // 각 바이트 출력 (최대 6개)
-        for (let i = 0; i < Math.min(len, 6); i++) {
-            let c = text.charCodeAt(i);
-            let hex = "";
-            let h1 = (c >> 4) & 0x0F;
-            let h2 = c & 0x0F;
-            hex += String.fromCharCode(h1 < 10 ? 48 + h1 : 55 + h1);
-            hex += String.fromCharCode(h2 < 10 ? 48 + h2 : 55 + h2);
-
-            drawAscii(hex.charCodeAt(0), i * 24, 16 + Math.floor(i / 3) * 16);
-            drawAscii(hex.charCodeAt(1), i * 24 + 8, 16 + Math.floor(i / 3) * 16);
-        }
-
-        updateDisplay();
+    //% weight=91
+    //% hexCodes.fieldEditor="koreantext"
+    //% hexCodes.fieldOptions.decompileLiterals=true
+    export function showKoreanText(hexCodes: string, x: number, y: number): void {
+        showKoreanHex(hexCodes, x, y);
     }
 
     /**
@@ -1173,7 +1151,7 @@ namespace OLEDKorean {
      * @param x X 좌표
      * @param y Y 좌표
      */
-    //% block="OLED 0.96 한글 %hexCodes x: %x y: %y"
+    //% block="OLED 0.96 한글(HEX) %hexCodes x: %x y: %y"
     //% group="OLED 0.96 SSD1306"
     //% weight=89
     export function showKoreanHex(hexCodes: string, x: number, y: number): void {

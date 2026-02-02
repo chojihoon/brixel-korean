@@ -6,9 +6,16 @@
         "core": "*"
     },
     "files": [
-        "oled_korean.ts"
+        "oled_korean.ts",
+        "editor.ts"
     ],
     "supportedTargets": [
         "microbit"
+    ],
+    "fieldEditors": [
+        {
+            "selector": "koreantext",
+            "editor": "FieldKoreanText"
+        }
     ]
 }
